@@ -8,7 +8,6 @@ export const firebaseConfig = {
   appId: "1:976555017736:web:a32845dc0fef7f224033bd"
 };
 
-// Admin UID: enforced by Firestore/Storage rules as well as admin UI.
 export const ADMIN_UID = "u4gmt1pDA3T7AyIKEdiLAztM6xH2";
 
 export function isConfigured() {
