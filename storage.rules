@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.uid == 'COLE_AQUI_O_UID_DO_ADMIN';
+    }
+    function verifiedEmail() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email is string;
+    }
+    function hasGrant(projectId) {
+      let email = request.auth.token.email.lower();
+      let grantPath = /databases/(default)/documents/grants/$(email + '__' + projectId);
+      return verifiedEmail()
+        && firestore.exists(grantPath)
+        && firestore.get(grantPath).data.email == email
+        && firestore.get(grantPath).data.projectId == projectId;
+    }
+
+    match /public/projects/{projectId}/{fileName} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isAdmin()
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|webp|gif)');
+      allow delete: if isAdmin();
+    }
+
+    match /private/projects/{projectId}/{fileName} {
+      allow get: if isAdmin() || hasGrant(projectId);
+      allow list: if false;
+      allow create, update: if isAdmin()
+        && request.resource.size > 0
+        && request.resource.size <= 100 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+  }
+}

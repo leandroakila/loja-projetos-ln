@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Administração — LN Sistemas</title>
+  <meta name="theme-color" content="#0f1e3a">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script type="module" src="assets/js/admin.js"></script>
+</head>
+<body class="admin">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="LN Sistemas — início">
+        <img src="assets/img/favicon.svg" alt="" width="36" height="36">
+        <span>LN <strong>Sistemas</strong> · Admin</span>
+      </a>
+      <div id="admin-user" class="admin-user" hidden>
+        <span id="admin-email" class="small"></span>
+        <button id="logout" class="btn btn-ghost btn-sm" type="button">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+
+      <!-- Firebase não configurado -->
+      <section id="config-view" class="panel narrow" hidden>
+        <h1>Configuração pendente</h1>
+        <p>Preencha <code>assets/js/firebase-config.js</code> com os dados do seu app Web do Firebase e recarregue a página. Veja o README.</p>
+      </section>
+
+      <!-- Login -->
+      <section id="login-view" class="panel narrow" hidden>
+        <h1>Entrar no painel</h1>
+        <form id="login-form" class="form" novalidate>
+          <label class="field"><span>E-mail</span><input name="email" type="email" autocomplete="username" required></label>
+          <label class="field"><span>Senha</span><input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+        </form>
+        <div class="divider"><span>ou</span></div>
+        <button id="google-login" class="btn btn-outline btn-block" type="button">Entrar com Google</button>
+        <p id="login-error" class="form-error" role="alert"></p>
+      </section>
+
+      <!-- Acesso negado (útil para descobrir o UID na configuração) -->
+      <section id="denied-view" class="panel narrow" hidden>
+        <h1>Acesso não autorizado</h1>
+        <p>Esta conta não é a conta administradora configurada.</p>
+        <p>Se esta for a sua conta de administrador, copie o UID abaixo para <code>ADMIN_UID</code> em <code>assets/js/firebase-config.js</code> <strong>e</strong> para <code>firestore.rules</code> e <code>storage.rules</code>, publique as regras e recarregue.</p>
+        <p class="uid-box"><code id="denied-uid"></code> <button id="copy-uid" class="btn btn-outline btn-sm" type="button">Copiar UID</button></p>
+        <button id="denied-logout" class="btn btn-ghost-dark btn-sm" type="button">Sair</button>
+      </section>
+
+      <!-- Painel -->
+      <section id="admin-view" hidden>
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" aria-selected="true" data-tab="tab-projects" type="button">Projetos</button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="tab-grants" type="button">Liberações de acesso</button>
+        </div>
+
+        <!-- Projetos -->
+        <div id="tab-projects" role="tabpanel">
+          <div class="toolbar">
+            <input id="p-search" type="search" placeholder="Buscar projetos (inclui rascunhos)…" aria-label="Buscar projetos">
+            <select id="p-filter" aria-label="Filtrar status">
+              <option value="">Todos</option>
+              <option value="pub">Publicados</option>
+              <option value="draft">Rascunhos</option>
+            </select>
+            <button id="new-project" class="btn btn-primary btn-sm" type="button">+ Novo projeto</button>
+          </div>
+          <p id="p-count" class="muted small"></p>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Projeto</th><th>Tipo</th><th>Preço</th><th>Status</th><th>Arquivo privado</th><th class="right">Ações</th></tr></thead>
+              <tbody id="p-rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Liberações -->
+        <div id="tab-grants" role="tabpanel" hidden>
+          <div class="panel">
+            <h2>Liberar acesso a um cliente</h2>
+            <p class="muted small">Faça isso somente após confirmar o pagamento. O cliente entra na <a href="cliente.html" target="_blank">Área do cliente</a> com uma conta Google deste e-mail e consegue baixar o arquivo privado do projeto.</p>
+            <form id="grant-form" class="form form-grid" novalidate>
+              <label class="field"><span>E-mail Google do cliente *</span><input name="email" type="email" required maxlength="254" placeholder="cliente@gmail.com"></label>
+              <label class="field"><span>Projeto *</span><select name="projectId" required></select></label>
+              <label class="field field-wide"><span>Observação interna (visível ao cliente)</span><input name="note" maxlength="500" placeholder="Ex.: Pedido #123 — versão 2.0"></label>
+              <div class="field-wide form-actions">
+                <button class="btn btn-primary" type="submit">Liberar acesso</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="toolbar">
+            <input id="g-search" type="search" placeholder="Buscar por e-mail ou projeto…" aria-label="Buscar liberações">
+          </div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th>Cliente</th><th>Projeto</th><th>Liberado em</th><th>Observação</th><th class="right">Ações</th></tr></thead>
+              <tbody id="g-rows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Editor de projeto -->
+  <dialog id="editor" class="dialog">
+    <form id="project-form" class="form" method="dialog" novalidate>
+      <header class="dialog-head">
+        <h2 id="editor-title">Novo projeto</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar">✕</button>
+      </header>
+
+      <div class="dialog-body form-grid">
+        <label class="field field-wide"><span>Título *</span><input name="title" required maxlength="120"></label>
+        <label class="field"><span>Slug (opcional)</span><input name="slug" maxlength="140" placeholder="gerado a partir do título"></label>
+        <label class="field"><span>Tipo *</span>
+          <select name="type" required></select>
+        </label>
+        <label class="field"><span>Categoria</span><input name="category" maxlength="60" list="category-list" placeholder="Ex.: Financeiro"></label>
+        <datalist id="category-list"></datalist>
+        <label class="field"><span>Tags (separadas por vírgula)</span><input name="tags" maxlength="600" placeholder="excel, estoque, vendas"></label>
+        <label class="field"><span>Preço (R$)</span><input name="price" type="number" min="0" max="1000000" step="0.01" placeholder="vazio = sob consulta"></label>
+        <label class="field"><span>Rótulo do preço</span><input name="priceLabel" maxlength="60" placeholder="Ex.: A partir de / Sob consulta"></label>
+        <label class="field field-wide"><span>Resumo * <small class="muted">(até 300 caracteres)</small></span><textarea name="summary" rows="2" maxlength="300" required></textarea></label>
+        <label class="field field-wide"><span>Descrição completa</span><textarea name="description" rows="6" maxlength="10000"></textarea></label>
+        <label class="field field-wide"><span>Itens incluídos (um por linha, até 30)</span><textarea name="features" rows="4" maxlength="6000"></textarea></label>
+
+        <fieldset class="field-wide fieldset">
+          <legend>Imagem pública (PNG, JPG, WEBP ou GIF, até 5 MB)</legend>
+          <div class="image-row">
+            <img id="image-preview" src="assets/img/placeholder.svg" alt="Pré-visualização" width="160" height="100">
+            <div>
+              <input name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+              <label class="check"><input name="removeImage" type="checkbox"> Remover imagem atual</label>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-wide fieldset fieldset-private">
+          <legend>Arquivo privado do produto (até 100 MB)</legend>
+          <p class="muted small">Fica em <code>private/</code> no Storage. Não aparece no catálogo; só o administrador e clientes liberados conseguem baixar.</p>
+          <p id="private-current" class="small"></p>
+          <input name="privateFile" type="file">
+          <label class="check"><input name="removePrivate" type="checkbox"> Remover arquivo privado atual</label>
+        </fieldset>
+
+        <div class="field-wide checks">
+          <label class="check"><input name="published" type="checkbox"> Publicado (visível no catálogo)</label>
+          <label class="check"><input name="featured" type="checkbox"> Destaque</label>
+        </div>
+
+        <div id="upload-progress" class="progress field-wide" hidden>
+          <span id="upload-label" class="small"></span>
+          <progress id="upload-bar" max="100" value="0"></progress>
+        </div>
+        <p id="form-error" class="form-error field-wide" role="alert"></p>
+      </div>
+
+      <footer class="dialog-foot">
+        <button class="btn btn-outline" type="button" data-close>Cancelar</button>
+        <button id="save-btn" class="btn btn-primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+</body>
+</html>

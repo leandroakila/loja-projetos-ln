@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.uid == 'COLE_AQUI_O_UID_DO_ADMIN';
+    }
+    function verifiedEmail() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email is string;
+    }
+    function grantId(projectId) {
+      return request.auth.token.email.lower() + '__' + projectId;
+    }
+    function hasGrant(projectId) {
+      return verifiedEmail()
+        && exists(/databases/$(database)/documents/grants/$(grantId(projectId)))
+        && get(/databases/$(database)/documents/grants/$(grantId(projectId))).data.email == request.auth.token.email.lower()
+        && get(/databases/$(database)/documents/grants/$(grantId(projectId))).data.projectId == projectId;
+    }
+    function validProject(d) {
+      return d.keys().hasAll(['title','slug','type','category','tags','price','priceLabel','summary','description','features','published','featured','imageUrl','imagePath','createdAt','updatedAt'])
+        && d.keys().hasOnly(['title','slug','type','category','tags','price','priceLabel','summary','description','features','published','featured','imageUrl','imagePath','createdAt','updatedAt'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
+        && d.slug is string && d.slug.size() <= 140
+        && d.type in ['planilha','sistema','automacao','outro']
+        && d.category is string && d.category.size() <= 60
+        && d.tags is list && d.tags.size() <= 20
+        && d.priceLabel is string && d.priceLabel.size() <= 60
+        && (d.price == null || (d.price is number && d.price >= 0 && d.price <= 1000000))
+        && d.summary is string && d.summary.size() > 0 && d.summary.size() <= 300
+        && d.description is string && d.description.size() <= 10000
+        && d.features is list && d.features.size() <= 30
+        && d.published is bool && d.featured is bool
+        && d.imageUrl is string && d.imageUrl.size() <= 2048
+        && d.imagePath is string && d.imagePath.size() <= 500;
+    }
+
+    match /projects/{projectId} {
+      allow get, list: if isAdmin() || resource.data.published == true;
+      allow create, update: if isAdmin() && validProject(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /projectFiles/{projectId} {
+      allow get: if isAdmin() || hasGrant(projectId);
+      allow list: if isAdmin();
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['storagePath','fileName','contentType','size','updatedAt'])
+        && request.resource.data.keys().hasAll(['storagePath','fileName','contentType','size','updatedAt'])
+        && request.resource.data.storagePath is string
+        && request.resource.data.storagePath.matches('private/projects/' + projectId + '/[^/]+')
+        && request.resource.data.fileName is string && request.resource.data.fileName.size() <= 200
+        && request.resource.data.contentType is string && request.resource.data.contentType.size() <= 200
+        && request.resource.data.size is int && request.resource.data.size > 0 && request.resource.data.size <= 104857600;
+      allow delete: if isAdmin();
+    }
+
+    match /grants/{grantDocId} {
+      allow get, list: if isAdmin() || (verifiedEmail() && resource.data.email == request.auth.token.email.lower());
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['email','projectId','projectTitle','note','createdAt'])
+        && request.resource.data.keys().hasAll(['email','projectId','projectTitle','note','createdAt'])
+        && request.resource.data.email is string && request.resource.data.email.size() <= 254
+        && request.resource.data.projectId is string && request.resource.data.projectId.size() <= 128
+        && grantDocId == request.resource.data.email + '__' + request.resource.data.projectId
+        && request.resource.data.projectTitle is string && request.resource.data.projectTitle.size() <= 120
+        && request.resource.data.note is string && request.resource.data.note.size() <= 500;
+      allow delete: if isAdmin();
+    }
+  }
+}

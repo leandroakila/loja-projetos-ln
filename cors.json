@@ -1,0 +1,11 @@
+[
+  {
+    "origin": [
+      "https://SEU_USUARIO.github.io",
+      "http://localhost:8080"
+    ],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type", "Content-Disposition", "Content-Length"],
+    "maxAgeSeconds": 3600
+  }
+]

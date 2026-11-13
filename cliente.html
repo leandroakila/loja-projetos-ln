@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Área do cliente — LN Sistemas</title>
+  <meta name="theme-color" content="#0f1e3a">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script type="module" src="assets/js/client.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="LN Sistemas — início">
+        <img src="assets/img/favicon.svg" alt="" width="36" height="36">
+        <span>LN <strong>Sistemas</strong></span>
+      </a>
+      <nav class="site-nav site-nav-static" aria-label="Principal">
+        <a href="index.html#catalogo">Catálogo</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container narrow">
+      <h1>Área do cliente</h1>
+
+      <div id="config-view" class="notice notice-warn" hidden>A área do cliente ainda está em configuração.</div>
+
+      <section id="login-view" class="panel" hidden>
+        <p>Entre com a <strong>mesma conta Google</strong> (e-mail) informada na compra para ver e baixar os projetos liberados para você.</p>
+        <button id="google-login" class="btn btn-primary btn-block" type="button">Entrar com Google</button>
+        <p class="muted small">Ainda não comprou? Veja o <a href="index.html#catalogo">catálogo</a> e fale pelo WhatsApp. A liberação é feita manualmente após a confirmação do pagamento.</p>
+        <p id="login-error" class="form-error" role="alert"></p>
+      </section>
+
+      <section id="files-view" hidden>
+        <div class="panel panel-row">
+          <p>Conectado como <strong id="client-email"></strong></p>
+          <button id="logout" class="btn btn-outline btn-sm" type="button">Sair</button>
+        </div>
+        <div id="files-status" class="notice" hidden></div>
+        <div id="files-list" class="file-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span data-year></span> LN Sistemas</p>
+      <p class="small"><a data-wa="Olá, Leandro! Preciso de ajuda com a Área do cliente.">Ajuda pelo WhatsApp</a></p>
+    </div>
+  </footer>
+</body>
+</html>
