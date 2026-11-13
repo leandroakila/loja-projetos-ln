@@ -1,29 +1,15 @@
-// =====================================================================
-// CONFIGURAÇÃO DO FIREBASE — SUBSTITUA OS PLACEHOLDERS
-// =====================================================================
-// Copie estes valores em: Console do Firebase > Configurações do projeto >
-// Seus apps > App da Web > "Configuração do SDK" (opção "Config").
-//
-// Esses valores NÃO são segredos: o Firebase foi feito para que eles fiquem
-// visíveis no navegador. A segurança real está nas regras do Firestore e do
-// Storage (firestore.rules e storage.rules). NUNCA coloque aqui chaves de
-// conta de serviço, senhas ou tokens privados.
-// =====================================================================
-
+// Firebase web app configuration — public client values.
 export const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.firebasestorage.app",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyDTHO2avgqouMWTCZUGhV4wz3esnSs8F2Y",
+  authDomain: "catalogo-ln-sistemas.firebaseapp.com",
+  projectId: "catalogo-ln-sistemas",
+  storageBucket: "catalogo-ln-sistemas.firebasestorage.app",
+  messagingSenderId: "976555017736",
+  appId: "1:976555017736:web:a32845dc0fef7f224033bd"
 };
 
-// UID do administrador (Authentication > Users > coluna "User UID").
-// Aqui ele só controla o que a interface mostra. Quem realmente bloqueia
-// o acesso são as regras: o MESMO UID precisa estar em firestore.rules e
-// storage.rules.
-export const ADMIN_UID = "COLE_AQUI_O_UID_DO_ADMIN";
+// Admin UID: enforced by Firestore/Storage rules as well as admin UI.
+export const ADMIN_UID = "u4gmt1pDA3T7AyIKEdiLAztM6xH2";
 
 export function isConfigured() {
   return !Object.values(firebaseConfig).some((v) => /SUA_|SEU_/.test(String(v)));
